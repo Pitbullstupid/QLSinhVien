@@ -1,23 +1,33 @@
 <?php
+session_start();
 require_once 'config.php';
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Quản lý sinh viên</title>
+    <title>Trang chủ - Quản lý sinh viên</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
         <nav class="nav-menu">
-            <a href="index.php"><i class="fas fa-home"></i> Trang chủ</a>
-            <a href="sinh_vien.php"><i class="fas fa-user-graduate"></i> Quản lý sinh viên</a>
-            <a href="lop.php"><i class="fas fa-chalkboard"></i> Quản lý lớp</a>
-            <a href="khoa.php"><i class="fas fa-university"></i> Quản lý khoa</a>
-            <a href="mon_hoc.php"><i class="fas fa-book"></i> Quản lý môn học</a>
-            <a href="diem.php"><i class="fas fa-star"></i> Quản lý điểm</a>
+            <a href="index.php" class="active"><i class="bi bi-house"></i> Trang chủ</a>
+            <a href="sinh_vien.php"><i class="bi bi-person-vcard"></i> Quản lý sinh viên</a>
+            <a href="lop.php"><i class="bi bi-mortarboard"></i> Quản lý lớp</a>
+            <a href="khoa.php"><i class="bi bi-building"></i> Quản lý khoa</a>
+            <a href="mon_hoc.php"><i class="bi bi-book"></i> Quản lý môn học</a>
+            <a href="diem.php"><i class="bi bi-star"></i> Quản lý điểm</a>
+            <a href="logout.php" class="text-danger"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a>
         </nav>
 
         <h1 class="section-title">Hệ thống quản lý sinh viên</h1>

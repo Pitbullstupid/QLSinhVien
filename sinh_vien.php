@@ -1,5 +1,23 @@
 <?php
+session_start();
 require_once 'config.php';
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+// Xử lý tìm kiếm
+$search = isset($_GET['search']) ? $_GET['search'] : '';
+$where_clause = '';
+if (!empty($search)) {
+    $search = $conn->real_escape_string($search);
+    $where_clause = "WHERE ma_sv LIKE '%$search%' 
+                     OR ho_ten LIKE '%$search%' 
+                     OR email LIKE '%$search%' 
+                     OR so_dien_thoai LIKE '%$search%'";
+}
 
 // Xử lý thêm sinh viên
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add'])) {
@@ -10,10 +28,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add'])) {
     $email = $_POST['email'];
     $so_dien_thoai = $_POST['so_dien_thoai'];
     $lop_id = $_POST['lop_id'];
-    
+
     $sql = "INSERT INTO sinh_vien (ma_sv, ho_ten, ngay_sinh, gioi_tinh, email, so_dien_thoai, lop_id) 
             VALUES ('$ma_sv', '$ho_ten', '$ngay_sinh', '$gioi_tinh', '$email', '$so_dien_thoai', $lop_id)";
-    
+
     if ($conn->query($sql)) {
         echo "<script>alert('Thêm sinh viên thành công!'); window.location.href='sinh_vien.php';</script>";
     } else {
@@ -31,7 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit'])) {
     $email = $_POST['email'];
     $so_dien_thoai = $_POST['so_dien_thoai'];
     $lop_id = $_POST['lop_id'];
-    
+
     $sql = "UPDATE sinh_vien SET 
             ma_sv = '$ma_sv',
             ho_ten = '$ho_ten',
@@ -41,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit'])) {
             so_dien_thoai = '$so_dien_thoai',
             lop_id = $lop_id
             WHERE id = $id";
-    
+
     if ($conn->query($sql)) {
         echo "<script>alert('Cập nhật sinh viên thành công!'); window.location.href='sinh_vien.php';</script>";
     } else {
@@ -53,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit'])) {
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
     $sql = "DELETE FROM sinh_vien WHERE id = $id";
-    
+
     if ($conn->query($sql)) {
         echo "<script>alert('Xóa sinh viên thành công!'); window.location.href='sinh_vien.php';</script>";
     } else {
@@ -62,23 +80,21 @@ if (isset($_GET['delete'])) {
 }
 
 // Lấy danh sách lớp
-$sql = "SELECT * FROM lop";
-$lop_result = $conn->query($sql);
-$lop_list = [];
-while ($row = $lop_result->fetch_assoc()) {
-    $lop_list[] = $row;
-}
+$sql_lop = "SELECT * FROM lop";
+$result_lop = $conn->query($sql_lop);
 
-// Lấy danh sách sinh viên
-$sql = "SELECT sv.*, l.ten_lop, k.ten_khoa 
-        FROM sinh_vien sv 
-        LEFT JOIN lop l ON sv.lop_id = l.id 
-        LEFT JOIN khoa k ON l.khoa_id = k.id";
-$sinh_vien_result = $conn->query($sql);
+// Lấy danh sách sinh viên với điều kiện tìm kiếm
+$sql = "SELECT s.*, l.ten_lop 
+        FROM sinh_vien s 
+        LEFT JOIN lop l ON s.lop_id = l.id 
+        $where_clause 
+        ORDER BY s.id DESC";
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>Quản lý sinh viên</title>
@@ -86,15 +102,17 @@ $sinh_vien_result = $conn->query($sql);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <nav class="nav-menu">
             <a href="index.php"><i class="bi bi-house"></i> Trang chủ</a>
-            <a href="sinh_vien.php"><i class="bi bi-person-vcard"></i> Quản lý sinh viên</a>
+            <a href="sinh_vien.php" class="active"><i class="bi bi-person-vcard"></i> Quản lý sinh viên</a>
             <a href="lop.php"><i class="bi bi-mortarboard"></i> Quản lý lớp</a>
             <a href="khoa.php"><i class="bi bi-building"></i> Quản lý khoa</a>
             <a href="mon_hoc.php"><i class="bi bi-book"></i> Quản lý môn học</a>
             <a href="diem.php"><i class="bi bi-star"></i> Quản lý điểm</a>
+            <a href="logout.php" class="text-danger"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a>
         </nav>
 
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -104,52 +122,76 @@ $sinh_vien_result = $conn->query($sql);
             </button>
         </div>
 
+        <!-- Form tìm kiếm -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm theo mã SV, họ tên, email hoặc số điện thoại..." value="<?php echo htmlspecialchars($search); ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Tìm kiếm
+                        </button>
+                        <?php if (!empty($search)): ?>
+                            <a href="sinh_vien.php" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Xóa tìm kiếm
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Danh sách sinh viên -->
         <div class="card">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0"><i class="bi bi-person-vcard"></i> Danh sách sinh viên</h5>
-                </div>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
+                                <th><i class="bi bi-hash"></i> ID</th>
                                 <th><i class="bi bi-person-badge"></i> Mã SV</th>
-                                <th><i class="bi bi-person"></i> Họ tên</th>
-                                <th><i class="bi bi-calendar"></i> Ngày sinh</th>
-                                <th><i class="bi bi-gender-ambiguous"></i> Giới tính</th>
+                                <th><i class="bi bi-person"></i> Họ Tên</th>
+                                <th><i class="bi bi-calendar"></i> Ngày Sinh</th>
+                                <th><i class="bi bi-gender-ambiguous"></i> Giới Tính</th>
+                                <th><i class="bi bi-envelope"></i> Email</th>
+                                <th><i class="bi bi-telephone"></i> Số Điện Thoại</th>
                                 <th><i class="bi bi-mortarboard"></i> Lớp</th>
-                                <th><i class="bi bi-building"></i> Khoa</th>
                                 <th><i class="bi bi-gear"></i> Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php while ($row = $sinh_vien_result->fetch_assoc()): ?>
-                            <tr>
-                                <td><?php echo $row['ma_sv']; ?></td>
-                                <td><?php echo $row['ho_ten']; ?></td>
-                                <td><?php echo $row['ngay_sinh']; ?></td>
-                                <td>
-                                    <?php if ($row['gioi_tinh'] == 'Nam'): ?>
-                                        <i class="bi bi-gender-male text-primary"></i>
-                                    <?php else: ?>
-                                        <i class="bi bi-gender-female text-danger"></i>
-                                    <?php endif; ?>
-                                    <?php echo $row['gioi_tinh']; ?>
-                                </td>
-                                <td><?php echo $row['ten_lop']; ?></td>
-                                <td><?php echo $row['ten_khoa']; ?></td>
-                                <td>
-                                    <a href="?edit=<?php echo $row['id']; ?>" class="btn btn-sm btn-primary">
-                                        <i class="bi bi-pencil"></i> Sửa
-                                    </a>
-                                    <a href="?delete=<?php echo $row['id']; ?>" class="btn btn-sm btn-danger" 
-                                       onclick="return confirm('Bạn có chắc muốn xóa sinh viên này?')">
-                                        <i class="bi bi-trash"></i> Xóa
-                                    </a>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
+                            <?php if ($result->num_rows > 0): ?>
+                                <?php while ($row = $result->fetch_assoc()): ?>
+                                    <tr>
+                                        <td><?php echo $row['id']; ?></td>
+                                        <td><?php echo htmlspecialchars($row['ma_sv']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['ho_ten']); ?></td>
+                                        <td><?php echo $row['ngay_sinh']; ?></td>
+                                        <td><?php echo $row['gioi_tinh']; ?></td>
+                                        <td><?php echo htmlspecialchars($row['email']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['so_dien_thoai']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['ten_lop']); ?></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary" onclick="editStudent(<?php echo $row['id']; ?>, '<?php echo htmlspecialchars($row['ma_sv']); ?>', '<?php echo htmlspecialchars($row['ho_ten']); ?>', '<?php echo $row['ngay_sinh']; ?>', '<?php echo $row['gioi_tinh']; ?>', '<?php echo htmlspecialchars($row['email']); ?>', '<?php echo htmlspecialchars($row['so_dien_thoai']); ?>', <?php echo $row['lop_id']; ?>)">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
+                                            <a href="?delete=<?php echo $row['id']; ?>" class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Bạn có chắc muốn xóa sinh viên này?')">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="9" class="text-center">Không tìm thấy sinh viên nào</td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -169,16 +211,16 @@ $sinh_vien_result = $conn->query($sql);
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label"><i class="bi bi-person-badge"></i> Mã sinh viên:</label>
-                                    <input type="text" name="ma_sv" class="form-control" required 
-                                           pattern="[A-Za-z0-9]+" minlength="5" maxlength="20"
-                                           title="Mã sinh viên phải từ 5-20 ký tự, chỉ bao gồm chữ và số">
+                                    <input type="text" name="ma_sv" class="form-control" required
+                                        pattern="[A-Za-z0-9]+" minlength="5" maxlength="20"
+                                        title="Mã sinh viên phải từ 5-20 ký tự, chỉ bao gồm chữ và số">
                                     <div class="invalid-feedback">Vui lòng nhập mã sinh viên hợp lệ</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label"><i class="bi bi-person"></i> Họ tên:</label>
                                     <input type="text" name="ho_ten" class="form-control" required
-                                           pattern="[A-Za-zÀ-ỹ\s]+" minlength="2" maxlength="50"
-                                           title="Họ tên phải từ 2-50 ký tự, chỉ bao gồm chữ cái">
+                                        pattern="[A-Za-zÀ-ỹ\s]+" minlength="2" maxlength="50"
+                                        title="Họ tên phải từ 2-50 ký tự, chỉ bao gồm chữ cái">
                                     <div class="invalid-feedback">Vui lòng nhập họ tên hợp lệ</div>
                                 </div>
                             </div>
@@ -186,7 +228,7 @@ $sinh_vien_result = $conn->query($sql);
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label"><i class="bi bi-calendar"></i> Ngày sinh:</label>
                                     <input type="date" name="ngay_sinh" class="form-control" required
-                                           max="<?php echo date('Y-m-d'); ?>">
+                                        max="<?php echo date('Y-m-d'); ?>">
                                     <div class="invalid-feedback">Vui lòng chọn ngày sinh hợp lệ</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
@@ -203,13 +245,13 @@ $sinh_vien_result = $conn->query($sql);
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label"><i class="bi bi-envelope"></i> Email:</label>
                                     <input type="email" name="email" class="form-control" required
-                                           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                                        pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
                                     <div class="invalid-feedback">Vui lòng nhập email hợp lệ</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label"><i class="bi bi-telephone"></i> Số điện thoại:</label>
                                     <input type="tel" name="so_dien_thoai" class="form-control" required
-                                           pattern="[0-9]{10,11}" title="Số điện thoại phải có 10-11 số">
+                                        pattern="[0-9]{10,11}" title="Số điện thoại phải có 10-11 số">
                                     <div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ</div>
                                 </div>
                             </div>
@@ -217,8 +259,8 @@ $sinh_vien_result = $conn->query($sql);
                                 <label class="form-label"><i class="bi bi-mortarboard"></i> Lớp:</label>
                                 <select name="lop_id" class="form-select" required>
                                     <option value="">Chọn lớp</option>
-                                    <?php foreach ($lop_list as $lop): ?>
-                                    <option value="<?php echo $lop['id']; ?>"><?php echo $lop['ten_lop']; ?></option>
+                                    <?php foreach ($result_lop as $lop): ?>
+                                        <option value="<?php echo $lop['id']; ?>"><?php echo $lop['ten_lop']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                                 <div class="invalid-feedback">Vui lòng chọn lớp</div>
@@ -252,15 +294,15 @@ $sinh_vien_result = $conn->query($sql);
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label"><i class="bi bi-person-badge"></i> Mã sinh viên:</label>
                                     <input type="text" name="ma_sv" id="edit_ma_sv" class="form-control" required
-                                           pattern="[A-Za-z0-9]+" minlength="5" maxlength="20"
-                                           title="Mã sinh viên phải từ 5-20 ký tự, chỉ bao gồm chữ và số">
+                                        pattern="[A-Za-z0-9]+" minlength="5" maxlength="20"
+                                        title="Mã sinh viên phải từ 5-20 ký tự, chỉ bao gồm chữ và số">
                                     <div class="invalid-feedback">Vui lòng nhập mã sinh viên hợp lệ</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label"><i class="bi bi-person"></i> Họ tên:</label>
                                     <input type="text" name="ho_ten" id="edit_ho_ten" class="form-control" required
-                                           pattern="[A-Za-zÀ-ỹ\s]+" minlength="2" maxlength="50"
-                                           title="Họ tên phải từ 2-50 ký tự, chỉ bao gồm chữ cái">
+                                        pattern="[A-Za-zÀ-ỹ\s]+" minlength="2" maxlength="50"
+                                        title="Họ tên phải từ 2-50 ký tự, chỉ bao gồm chữ cái">
                                     <div class="invalid-feedback">Vui lòng nhập họ tên hợp lệ</div>
                                 </div>
                             </div>
@@ -268,7 +310,7 @@ $sinh_vien_result = $conn->query($sql);
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label"><i class="bi bi-calendar"></i> Ngày sinh:</label>
                                     <input type="date" name="ngay_sinh" id="edit_ngay_sinh" class="form-control" required
-                                           max="<?php echo date('Y-m-d'); ?>">
+                                        max="<?php echo date('Y-m-d'); ?>">
                                     <div class="invalid-feedback">Vui lòng chọn ngày sinh hợp lệ</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
@@ -285,13 +327,13 @@ $sinh_vien_result = $conn->query($sql);
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label"><i class="bi bi-envelope"></i> Email:</label>
                                     <input type="email" name="email" id="edit_email" class="form-control" required
-                                           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                                        pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
                                     <div class="invalid-feedback">Vui lòng nhập email hợp lệ</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label"><i class="bi bi-telephone"></i> Số điện thoại:</label>
                                     <input type="tel" name="so_dien_thoai" id="edit_so_dien_thoai" class="form-control" required
-                                           pattern="[0-9]{10,11}" title="Số điện thoại phải có 10-11 số">
+                                        pattern="[0-9]{10,11}" title="Số điện thoại phải có 10-11 số">
                                     <div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ</div>
                                 </div>
                             </div>
@@ -299,8 +341,8 @@ $sinh_vien_result = $conn->query($sql);
                                 <label class="form-label"><i class="bi bi-mortarboard"></i> Lớp:</label>
                                 <select name="lop_id" id="edit_lop_id" class="form-select" required>
                                     <option value="">Chọn lớp</option>
-                                    <?php foreach ($lop_list as $lop): ?>
-                                    <option value="<?php echo $lop['id']; ?>"><?php echo $lop['ten_lop']; ?></option>
+                                    <?php foreach ($result_lop as $lop): ?>
+                                        <option value="<?php echo $lop['id']; ?>"><?php echo $lop['ten_lop']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
                                 <div class="invalid-feedback">Vui lòng chọn lớp</div>
@@ -323,11 +365,11 @@ $sinh_vien_result = $conn->query($sql);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Form validation
-        (function () {
+        (function() {
             'use strict'
             var forms = document.querySelectorAll('.needs-validation')
-            Array.prototype.slice.call(forms).forEach(function (form) {
-                form.addEventListener('submit', function (event) {
+            Array.prototype.slice.call(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
                     if (!form.checkValidity()) {
                         event.preventDefault()
                         event.stopPropagation()
@@ -338,41 +380,26 @@ $sinh_vien_result = $conn->query($sql);
         })()
 
         // Reset form when modal is closed
-        document.getElementById('addStudentModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('addStudentModal').addEventListener('hidden.bs.modal', function() {
             document.querySelector('#addStudentModal form').reset();
             document.querySelector('#addStudentModal form').classList.remove('was-validated');
         });
 
         // Handle edit button click
-        document.querySelectorAll('a[href^="?edit="]').forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const id = this.getAttribute('href').split('=')[1];
-                
-                // Fetch student data
-                fetch('get_student.php?id=' + id)
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('edit_id').value = data.id;
-                        document.getElementById('edit_ma_sv').value = data.ma_sv;
-                        document.getElementById('edit_ho_ten').value = data.ho_ten;
-                        document.getElementById('edit_ngay_sinh').value = data.ngay_sinh;
-                        document.getElementById('edit_gioi_tinh').value = data.gioi_tinh;
-                        document.getElementById('edit_email').value = data.email;
-                        document.getElementById('edit_so_dien_thoai').value = data.so_dien_thoai;
-                        document.getElementById('edit_lop_id').value = data.lop_id;
-                        
-                        // Show modal
-                        new bootstrap.Modal(document.getElementById('editStudentModal')).show();
-                    });
-            });
-        });
 
-        // Reset edit form when modal is closed
-        document.getElementById('editStudentModal').addEventListener('hidden.bs.modal', function () {
-            document.querySelector('#editStudentModal form').reset();
-            document.querySelector('#editStudentModal form').classList.remove('was-validated');
-        });
+        function editStudent(id, maSv, hoTen, ngaySinh, gioiTinh, email, soDienThoai, lopId) {
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_ma_sv').value = maSv;
+            document.getElementById('edit_ho_ten').value = hoTen;
+            document.getElementById('edit_ngay_sinh').value = ngaySinh;
+            document.getElementById('edit_gioi_tinh').value = gioiTinh;
+            document.getElementById('edit_email').value = email;
+            document.getElementById('edit_so_dien_thoai').value = soDienThoai;
+            document.getElementById('edit_lop_id').value = lopId;
+            var editModal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+            editModal.show();
+        }
     </script>
 </body>
+
 </html>
