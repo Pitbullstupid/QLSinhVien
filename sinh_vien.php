@@ -87,8 +87,7 @@ $result_lop = $conn->query($sql_lop);
 $sql = "SELECT s.*, l.ten_lop 
         FROM sinh_vien s 
         LEFT JOIN lop l ON s.lop_id = l.id 
-        $where_clause 
-        ORDER BY s.id DESC";
+        $where_clause";
 $result = $conn->query($sql);
 ?>
 

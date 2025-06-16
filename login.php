@@ -11,11 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $username, $password);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $sql = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
+    $result = $conn->query($sql);
 
     if ($result->num_rows === 1) {
         $user = $result->fetch_assoc();
@@ -39,12 +36,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="style.css" rel="stylesheet">
 </head>
 <style>
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 120px;
+}
 
+.bi-box-arrow-in-right {
+    margin-right: 4px;
+}
 .card {
     border-radius: 1rem;
     overflow: hidden;
     animation: fadeInUp 1s ease-in-out;
 }
+
 
 @keyframes fadeInUp {
     from {
@@ -55,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         opacity: 1;
         transform: translateY(0);
     }
+    
 }
 
 </style>
