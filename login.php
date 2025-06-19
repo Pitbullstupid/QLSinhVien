@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <title>Đăng nhập</title>
@@ -36,37 +37,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="style.css" rel="stylesheet">
 </head>
 <style>
-.btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-width: 120px;
-}
-
-.bi-box-arrow-in-right {
-    margin-right: 4px;
-}
-.card {
-    border-radius: 1rem;
-    overflow: hidden;
-    animation: fadeInUp 1s ease-in-out;
-}
-
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 120px;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    
-}
 
+    .bi-box-arrow-in-right {
+        margin-right: 4px;
+    }
+
+    .card {
+        border-radius: 1rem;
+        overflow: hidden;
+        animation: fadeInUp 1s ease-in-out;
+    }
+
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+    }
 </style>
+
 <body>
     <div class="container d-flex align-items-center justify-content-center min-vh-100">
         <div class="row w-100 justify-content-center">
@@ -76,9 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <h4 class="mb-0"><i class="bi bi-box-arrow-in-right"></i> Đăng nhập</h4>
                     </div>
                     <div class="card-body">
-                        <?php if (isset($error)): ?>
-                            <div class="alert alert-danger"><?php echo $error; ?></div>
-                        <?php endif; ?>
+                        <?php
+                        if (isset($error)) {
+                            echo "<div class='alert alert-danger'>$error</div>";
+                        }
+                        ?>
                         <form method="POST" class="needs-validation" novalidate>
                             <div class="mb-3">
                                 <label class="form-label"><i class="bi bi-person"></i> Tên đăng nhập:</label>
@@ -119,4 +124,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         })();
     </script>
 </body>
+
 </html>

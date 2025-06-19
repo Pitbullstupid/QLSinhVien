@@ -2,7 +2,6 @@
 session_start();
 require_once 'config.php';
 
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -39,7 +38,7 @@ if (!isset($_SESSION['user_id'])) {
             $result = $conn->query($sql);
             $row = $result->fetch_assoc();
             ?>
-            <div class="dashboard-item">
+            <div class="dashboard-item " onclick="location.href='sinh_vien.php';" style="cursor: pointer;">
                 <i class="fas fa-user-graduate fa-2x" style="color: var(--primary-color); margin-bottom: 15px;"></i>
                 <h2>Tổng số sinh viên</h2>
                 <p><?php echo $row['total']; ?></p>
@@ -51,7 +50,7 @@ if (!isset($_SESSION['user_id'])) {
             $result = $conn->query($sql);
             $row = $result->fetch_assoc();
             ?>
-            <div class="dashboard-item">
+            <div class="dashboard-item " onclick="location.href='lop.php';" style="cursor: pointer;">
                 <i class="fas fa-chalkboard fa-2x" style="color: var(--success-color); margin-bottom: 15px;"></i>
                 <h2>Tổng số lớp</h2>
                 <p><?php echo $row['total']; ?></p>
@@ -63,7 +62,7 @@ if (!isset($_SESSION['user_id'])) {
             $result = $conn->query($sql);
             $row = $result->fetch_assoc();
             ?>
-            <div class="dashboard-item">
+            <div class="dashboard-item" onclick="location.href='khoa.php';" style="cursor: pointer;">
                 <i class="fas fa-university fa-2x" style="color: var(--warning-color); margin-bottom: 15px;"></i>
                 <h2>Tổng số khoa</h2>
                 <p><?php echo $row['total']; ?></p>
@@ -75,7 +74,7 @@ if (!isset($_SESSION['user_id'])) {
             $result = $conn->query($sql);
             $row = $result->fetch_assoc();
             ?>
-            <div class="dashboard-item">
+            <div class="dashboard-item " onclick="location.href='mon_hoc.php';" style="cursor: pointer;">
                 <i class="fas fa-book fa-2x" style="color: var(--danger-color); margin-bottom: 15px;"></i>
                 <h2>Tổng số môn học</h2>
                 <p><?php echo $row['total']; ?></p>

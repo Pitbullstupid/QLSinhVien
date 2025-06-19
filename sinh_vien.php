@@ -2,7 +2,7 @@
 session_start();
 require_once 'config.php';
 
-// Check if user is logged in
+// Kiểm tra login
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -12,7 +12,6 @@ if (!isset($_SESSION['user_id'])) {
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 $where_clause = '';
 if (!empty($search)) {
-    $search = $conn->real_escape_string($search);
     $where_clause = "WHERE ma_sv LIKE '%$search%' 
                      OR ho_ten LIKE '%$search%' 
                      OR email LIKE '%$search%' 
@@ -363,7 +362,6 @@ $result = $conn->query($sql);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Form validation
         (function() {
             'use strict'
             var forms = document.querySelectorAll('.needs-validation')
@@ -378,14 +376,13 @@ $result = $conn->query($sql);
             })
         })()
 
-        // Reset form when modal is closed
+        // reset form
         document.getElementById('addStudentModal').addEventListener('hidden.bs.modal', function() {
             document.querySelector('#addStudentModal form').reset();
             document.querySelector('#addStudentModal form').classList.remove('was-validated');
         });
 
-        // Handle edit button click
-
+        // hien thị modal sửa sinh viên
         function editStudent(id, maSv, hoTen, ngaySinh, gioiTinh, email, soDienThoai, lopId) {
             document.getElementById('edit_id').value = id;
             document.getElementById('edit_ma_sv').value = maSv;

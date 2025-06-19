@@ -2,7 +2,6 @@
 session_start();
 require_once 'config.php';
 
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -12,10 +11,8 @@ if (!isset($_SESSION['user_id'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add'])) {
     $ten_lop = $_POST['ten_lop'];
     $khoa_id = $_POST['khoa_id'];
-    $sql = "INSERT INTO lop (ten_lop, khoa_id) VALUES (?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("si", $ten_lop, $khoa_id);
-    $stmt->execute();
+    $sql = "INSERT INTO lop (ten_lop, khoa_id) VALUES ('$ten_lop', $khoa_id)";
+    $conn->query($sql);
     header("Location: lop.php");
     exit();
 }
@@ -23,10 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add'])) {
 // Xử lý xóa lớp
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
-    $sql = "DELETE FROM lop WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
+    $sql = "DELETE FROM lop WHERE id = $id";
+    $conn->query($sql);
     header("Location: lop.php");
     exit();
 }
@@ -36,10 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     $id = $_POST['id'];
     $ten_lop = $_POST['ten_lop'];
     $khoa_id = $_POST['khoa_id'];
-    $sql = "UPDATE lop SET ten_lop = ?, khoa_id = ? WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sii", $ten_lop, $khoa_id, $id);
-    $stmt->execute();
+    $sql = "UPDATE lop SET ten_lop = '$ten_lop', khoa_id = $khoa_id WHERE id = $id";
+    $conn->query($sql);
     header("Location: lop.php");
     exit();
 }
@@ -54,6 +47,7 @@ $sql = "SELECT l.*, k.ten_khoa
         LEFT JOIN khoa k ON l.khoa_id = k.id";
 $result = $conn->query($sql);
 ?>
+
 
 <!DOCTYPE html>
 <html>
@@ -214,7 +208,6 @@ $result = $conn->query($sql);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Form validation
         (function () {
             'use strict'
             var forms = document.querySelectorAll('.needs-validation')

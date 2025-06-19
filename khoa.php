@@ -2,17 +2,15 @@
 session_start();
 require_once 'config.php';
 
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
 // Xử lý thêm khoa mới
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add'])) {
-    $ma_khoa = $_POST['ma_khoa'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add'])) {;
     $ten_khoa = $_POST['ten_khoa'];
-    $sql = "INSERT INTO khoa (ma_khoa, ten_khoa) VALUES ('$ma_khoa', '$ten_khoa')";
+    $sql = "INSERT INTO khoa (ten_khoa) VALUES ('$ten_khoa')";
     $conn->query($sql);
     header("Location: khoa.php");
     exit();
@@ -30,9 +28,8 @@ if (isset($_GET['delete'])) {
 // Xử lý cập nhật khoa
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     $id = $_POST['id'];
-    $ma_khoa = $_POST['ma_khoa'];
     $ten_khoa = $_POST['ten_khoa'];
-    $sql = "UPDATE khoa SET ma_khoa = '$ma_khoa', ten_khoa = '$ten_khoa' WHERE id = $id";
+    $sql = "UPDATE khoa SET ten_khoa = '$ten_khoa' WHERE id = $id";
     $conn->query($sql);
     header("Location: khoa.php");
     exit();
@@ -174,7 +171,6 @@ $result = $conn->query($sql);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Form validation
         (function () {
             'use strict'
             var forms = document.querySelectorAll('.needs-validation')
